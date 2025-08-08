@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Race Timer</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+    <header>
+    <nav>
+      <ul class="navbar">
+        <li><a href="index.html">Home</a></li>
+        <li><a href="racesetup.html">Race Setup</a></li>
+        <li><a href="timer.html" class="active">Race Timer</a></li>
+        <li><a href="results.html">Race Results</a></li>
+        <li><a href="contact.html">Contact</a></li>
+      </ul>
+    </nav>
+  </header>
+  <main>
+    <h1>Race Timer</h1>
+    <button id="start-stop">Start</button>
+    <p id="timer-display">00:00.00</p>
+
+    <div id="athlete-buttons"></div>
+
+    <h2>Lap Records</h2>
+    <table id="lap-table">
+      <thead>
+        <tr>
+            <th class="col-number">Athlete #</th>
+            <th class="col-lap">Lap</th>
+            <th class="col-time">Time</th>
+            <th class="col-split">Split</th>
+            <th class="col-name">Name</th>
+            <th class="col-delete">Actions</th>
+        </tr>
+        </thead>
+      <tbody></tbody>
+    </table>
+
+    <button id="export-csv">Export to CSV</button>
+    <button onclick="window.location.href='results.html'">View Results</button>
+    <button id="reset-btn">Reset</button>
+    <button id="undo-btn">Undo</button> 
+
+  </main>
+
+  <script>
+    const athletes = JSON.parse(localStorage.getItem("athletes") || "[]");
+    const athleteButtons = document.getElementById("athlete-buttons");
+    const lapTableBody = document.querySelector("#lap-table tbody");
+    const timerDisplay = document.getElementById("timer-display");
+    const startStopBtn = document.getElementById("start-stop");
+    const undoStack = [];
+
+    let raceStarted = false;
+    let startTime = null;
+    let timerInterval = null;
+    const lapData = [];
+    const lastLapTimes = {}; // athleteNumber -> last lap timestamp
+
+    function formatTime(ms) {
+      const totalSeconds = ms / 1000;
+      const minutes = Math.floor(totalSeconds / 60);
+      const seconds = (totalSeconds % 60).toFixed(2);
+      return `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(5, "0")}`;
+    }
+
+    function updateTimer() {
+      const now = Date.now();
+      const elapsed = now - startTime;
+      timerDisplay.textContent = formatTime(elapsed);
+    }
+
+    startStopBtn.addEventListener("click", () => {
+      if (!raceStarted) {
+        raceStarted = true;
+        startTime = Date.now();
+        timerInterval = setInterval(updateTimer, 100);
+        startStopBtn.textContent = "Stop";
+      } else {
+        if (confirm("Are you sure you want to stop the timer?")) {
+          clearInterval(timerInterval);
+          raceStarted = false;
+          startStopBtn.textContent = "Start";
+        }
+      }
+    });
+
+    function updateButton(index) {
+      const athlete = athletes[index];
+      const btn = document.querySelector(`.athlete-btn[data-index="${index}"]`);
+      btn.textContent = `${athlete.number} (${athlete.lapCount}/${athlete.laps})`;
+      if (athlete.lapCount >= athlete.laps) {
+        btn.style.backgroundColor = "red";
+      } else {
+        btn.style.backgroundColor = "#007acc";
+      }
+    }
+
+    const lapBtn = document.createElement("button");
+lapBtn.textContent = "Lap";
+lapBtn.id = "lap-btn";
+lapBtn.style.backgroundColor = "#a5d6a7"; // light green
+lapBtn.style.color = "#333";
+lapBtn.style.border = "none";
+lapBtn.style.padding = "1em";
+lapBtn.style.fontSize = "1em";
+lapBtn.style.borderRadius = "5px";
+lapBtn.style.cursor = "pointer";
+lapBtn.style.marginRight = "1em";
+
+lapBtn.addEventListener("click", () => {
+  if (!raceStarted) return;
+
+  const now = Date.now();
+  const elapsed = formatTime(now - startTime);
+
+  const record = {
+    number: "—",
+    lap: "",
+    time: elapsed,
+    split: "",
+    name: "Lap Marker"
+  };
+
+  lapData.unshift(record);
+  undoStack.push({ type: "add", record });
+  renderTable();
+});
+
+athleteButtons.appendChild(lapBtn);
+
+    athletes.forEach((athlete, index) => {
+        
+      athlete.lapCount = 0;
+
+      const btn = document.createElement("button");
+      btn.textContent = `${athlete.number} (0/${athlete.laps})`;
+      btn.className = "athlete-btn";
+      btn.dataset.index = index;
+
+      btn.addEventListener("click", () => {
+        if (!raceStarted) return;
+
+        const now = Date.now();
+        const elapsed = formatTime(now - startTime);
+        const lastLap = lastLapTimes[athlete.number] || startTime;
+        const split = formatTime(now - lastLap);
+        lastLapTimes[athlete.number] = now;
+
+        athlete.lapCount++;
+        updateButton(index);
+
+        const record = {
+          number: athlete.number,
+          lap: athlete.lapCount,
+          time: elapsed,
+          split: split,
+          name: athlete.name
+        };
+
+        lapData.unshift(record);
+        undoStack.push({ type: "add", record });
+        renderTable();
+      });
+
+      athleteButtons.appendChild(btn);
+    });
+
+    function renderTable() {
+      lapTableBody.innerHTML = "";
+      lapData.forEach((record, i) => {
+        const row = document.createElement("tr");
+
+        row.innerHTML = `
+            <td class="col-number" contenteditable="true" onblur="handleEdit(${i}, this.textContent.trim())">${record.number}</td>
+            <td class="col-lap">${record.lap}</td>
+            <td class="col-time">${record.time}</td>
+            <td class="col-split">${record.split}</td>
+            <td class="col-name">${record.name || ""}</td>
+            <td class="col-delete"><button onclick="deleteLap(${i})">Delete</button></td>
+            `;
+
+        lapTableBody.appendChild(row);
+      });
+      localStorage.setItem("lapData", JSON.stringify(lapData));
+    }
+
+    function parseTime(timeStr) {
+    const [min, sec] = timeStr.split(":");
+    return Math.round((parseInt(min) * 60 + parseFloat(sec)) * 1000);
+    }
+
+    function recalculateSplits() {
+        const lapGroups = {};
+
+        // Group laps by athlete number
+        lapData.forEach(record => {
+            if (!lapGroups[record.number]) lapGroups[record.number] = [];
+            lapGroups[record.number].push(record);
+        });
+
+        // Recalculate splits for each athlete
+        Object.values(lapGroups).forEach(records => {
+            records.sort((a, b) => parseTime(a.time) - parseTime(b.time));
+            let lastTime = 0;
+
+            records.forEach(record => {
+            const currentTime = parseTime(record.time);
+            const splitMs = currentTime - lastTime;
+            record.split = formatTime(splitMs);
+            lastTime = currentTime;
+            });
+        });
+    }
+
+    window.deleteLap = function(index) {
+      const record = lapData[index];
+      const athlete = athletes.find(a => a.number === record.number);
+      if (athlete && athlete.lapCount > 0) {
+        athlete.lapCount--;
+        const idx = athletes.indexOf(athlete);
+        updateButton(idx);
+      }
+      undoStack.push({ type: "delete", record, index });
+      lapData.splice(index, 1);
+        recalculateSplits();
+        renderTable();
+
+    };
+
+        window.handleEdit = function(index, newNumber) {
+        const record = lapData[index];
+        const oldNumber = record.number;
+        if (newNumber === oldNumber) return;
+
+        const oldAthlete = athletes.find(a => a.number === oldNumber);
+        const newAthlete = athletes.find(a => a.number === newNumber);
+
+        if (oldAthlete && oldAthlete.lapCount > 0) {
+            oldAthlete.lapCount--;
+            updateButton(athletes.indexOf(oldAthlete));
+        }
+
+        if (newAthlete) {
+            newAthlete.lapCount++;
+            updateButton(athletes.indexOf(newAthlete));
+            record.name = newAthlete.name;
+        } else {
+            record.name = "";
+        }
+        undoStack.push({ type: "edit", index, oldNumber, newNumber });
+        record.number = newNumber;
+        recalculateSplits();
+        renderTable();
+        };
+
+    document.getElementById("export-csv").addEventListener("click", () => {
+      let csv = "Athlete #,Lap,Time,Split,Name\n";
+      lapData.forEach(r => {
+        csv += `${r.number},${r.lap},${r.time},${r.split},${r.name || ""}\n`;
+      });
+
+      const blob = new Blob([csv], { type: "text/csv" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "race_results.csv";
+      a.click();
+      URL.revokeObjectURL(url);
+    });
+
+    const resetBtn = document.getElementById("reset-btn");
+
+    resetBtn.addEventListener("click", () => {
+    if (!confirm("This will reset the timer and clear all lap data. Proceed?")) return;
+
+    // Stop timer if running
+    clearInterval(timerInterval);
+    raceStarted = false;
+    startTime = null;
+    timerDisplay.textContent = "00:00.00";
+    startStopBtn.textContent = "Start";
+
+    // Clear lap data and last lap times
+    lapData.length = 0;
+    for (const key in lastLapTimes) delete lastLapTimes[key];
+
+    // Reset athlete lap counts and buttons
+    athletes.forEach((athlete, index) => {
+        athlete.lapCount = 0;
+        updateButton(index);
+    });
+
+    // Refresh table
+    renderTable();
+    });
+
+    const undoBtn = document.getElementById("undo-btn");
+
+    undoBtn.addEventListener("click", () => {
+    const action = undoStack.pop();
+    if (!action) return;
+
+    if (action.type === "add") {
+        // Remove the added record
+        lapData.splice(lapData.indexOf(action.record), 1);
+        const athlete = athletes.find(a => a.number === action.record.number);
+        if (athlete && athlete.lapCount > 0) {
+        athlete.lapCount--;
+        updateButton(athletes.indexOf(athlete));
+        }
+    }
+
+    if (action.type === "delete") {
+        // Restore the deleted record
+        lapData.splice(action.index, 0, action.record);
+        const athlete = athletes.find(a => a.number === action.record.number);
+        if (athlete) {
+        athlete.lapCount++;
+        updateButton(athletes.indexOf(athlete));
+        }
+    }
+
+    if (action.type === "edit") {
+        const record = lapData[action.index];
+        const newAthlete = athletes.find(a => a.number === action.newNumber);
+        const oldAthlete = athletes.find(a => a.number === action.oldNumber);
+
+        if (newAthlete && newAthlete.lapCount > 0) {
+        newAthlete.lapCount--;
+        updateButton(athletes.indexOf(newAthlete));
+        }
+
+        if (oldAthlete) {
+        oldAthlete.lapCount++;
+        updateButton(athletes.indexOf(oldAthlete));
+        record.name = oldAthlete.name;
+        } else {
+        record.name = "";
+        }
+
+        record.number = action.oldNumber;
+    }
+
+    recalculateSplits();
+    renderTable();
+    });
+  </script>
+</body>
+</html>

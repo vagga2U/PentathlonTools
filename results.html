@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Race Results</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+    <header>
+    <nav>
+      <ul class="navbar">
+        <li><a href="index.html">Home</a></li>
+        <li><a href="racesetup.html">Race Setup</a></li>
+        <li><a href="timer.html">Race Timer</a></li>
+        <li><a href="results.html" class="active">Race Results</a></li>
+        <li><a href="contact.html">Contact</a></li>
+      </ul>
+    </nav>
+  </header>
+  <main>
+    <h1>Final Results</h1>
+    <div id="results-container"></div>
+    <button onclick="window.location.href='index.html'">Back to Timer</button>
+    <button id="export-results">Export Results</button>
+  </main>
+
+  <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
+  <script>
+    function formatTime(ms) {
+      const totalSeconds = ms / 1000;
+      const minutes = Math.floor(totalSeconds / 60);
+      const seconds = (totalSeconds % 60).toFixed(2);
+      return `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(5, "0")}`;
+    }
+
+    function parseTime(timeStr) {
+      const [min, sec] = timeStr.split(":");
+      return Math.round((parseInt(min) * 60 + parseFloat(sec)) * 1000);
+    }
+    let grouped = {}; 
+    function generateResults() {
+        const lapData = JSON.parse(localStorage.getItem("lapData") || "[]");
+        const resultsContainer = document.getElementById("results-container");
+
+        // Group laps by athlete number
+        const athleteLaps = {};
+        lapData.forEach(record => {
+            if (!athleteLaps[record.number]) athleteLaps[record.number] = [];
+            athleteLaps[record.number].push(record);
+        });
+
+        // Build athlete summaries
+        const summaries = Object.entries(athleteLaps).map(([number, records]) => {
+            records.sort((a, b) => parseTime(a.time) - parseTime(b.time));
+            const totalTime = parseTime(records[records.length - 1].time);
+            const name = records[0].name || "";
+            const splits = records.map(r => r.split);
+            const lapCount = records.length;
+
+            return { number, name, splits, totalTime, lapCount };
+        });
+
+        // Group by lap count
+        grouped = {};
+        summaries.forEach(summary => {
+            if (!grouped[summary.lapCount]) grouped[summary.lapCount] = [];
+            grouped[summary.lapCount].push(summary);
+        });
+
+        // Render each lap group
+        Object.entries(grouped).sort((a, b) => a[0] - b[0]).forEach(([lapCount, athletes]) => {
+            const table = document.createElement("table");
+            table.className = "result-table";
+
+            // Sort athletes by total time
+            athletes.sort((a, b) => a.totalTime - b.totalTime);
+
+            // Build header
+            const headers = ["Number", "Name"];
+            for (let i = 1; i <= parseInt(lapCount); i++) {
+            headers.push(`Split ${i}`);
+            }
+            headers.push("Total");
+
+            table.innerHTML = `
+            <caption>${lapCount} - Laps</caption>
+            <thead>
+                <tr>${headers.map(h => `<th>${h}</th>`).join("")}</tr>
+            </thead>
+            <tbody>
+                ${athletes.map(a => `
+                <tr>
+                    <td>${a.number}</td>
+                    <td>${a.name}</td>                    
+                    ${a.splits.map(s => `<td>${s}</td>`).join("")}
+                    <td>${formatTime(a.totalTime)}</td>
+                </tr>
+                `).join("")}
+            </tbody>
+            `;
+
+            resultsContainer.appendChild(table);
+        });
+        }
+
+    generateResults();
+
+    document.getElementById("export-results").addEventListener("click", () => {
+        const wb = XLSX.utils.book_new();
+
+        if (!grouped || Object.keys(grouped).length === 0) {
+        alert("No results available to export.");
+        return;
+        }
+
+        Object.entries(grouped).forEach(([lapCount, athletes]) => {
+        const headers = ["Number", "Name"];
+        for (let i = 1; i <= parseInt(lapCount); i++) headers.push(`Split ${i}`);
+        headers.push("Total");
+
+        const data = athletes.map(a => {
+            return [a.number, a.name, ...a.splits, formatTime(a.totalTime)];
+        });
+
+        const ws = XLSX.utils.aoa_to_sheet([headers, ...data]);
+        XLSX.utils.book_append_sheet(wb, ws, `${lapCount} Laps`);
+        });
+
+        XLSX.writeFile(wb, "final_results.xlsx");
+    });
+  </script>
+</body>
+</html>

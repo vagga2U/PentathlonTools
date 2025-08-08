@@ -1,0 +1,216 @@
+/* Reset and base styles */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+body {
+  font-family: 'Segoe UI', Roboto, sans-serif;
+  line-height: 1.6;
+  background-color: #f4f6f8;
+  color: #333;
+  padding: 0 1rem;
+}
+
+/* Header and Navigation */
+header {
+  background-color: #007acc;
+  padding: 1rem 0;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+.navbar {
+  list-style: none;
+  display: flex;
+  justify-content: center;
+  gap: 2rem;
+}
+.navbar a {
+  color: white;
+  text-decoration: none;
+  font-weight: bold;
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  transition: background-color 0.3s;
+}
+.navbar a:hover {
+  background-color: rgba(255,255,255,0.2);
+}
+.navbar .active {
+  background-color: white;
+  color: #007acc;
+}
+
+/* Main content */
+main {
+  max-width: 800px;
+  margin: 2rem auto;
+  background: white;
+  padding: 2rem;
+  border-radius: 8px;
+  box-shadow: 0 0 10px rgba(0,0,0,0.05);
+}
+main h1 {
+  margin-bottom: 1rem;
+  color: #007acc;
+}
+main p {
+  font-size: 1.1rem;
+}
+
+/* Footer */
+footer {
+  text-align: center;
+  padding: 1rem;
+  margin-top: 2rem;
+  font-size: 0.9rem;
+  color: #666;
+}
+
+/* Buttons */
+button {
+  background-color: #007acc;
+  color: white;
+  border: none;
+  padding: 0.6rem 1rem;
+  margin: 0.5rem 0;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 1rem;
+  transition: background-color 0.3s;
+}
+button:hover {
+  background-color: #005fa3;
+}
+
+/* Tables */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 1rem;
+}
+th, td {
+  border: 1px solid #ccc;
+  padding: 0.75rem;
+  text-align: center;
+}
+thead {
+  background-color: #e0f7fa;
+}
+caption {
+  font-weight: bold;
+  margin-bottom: 0.5rem;
+  text-align: left;
+}
+
+/* Responsive tweaks */
+@media (max-width: 600px) {
+  .navbar {
+    flex-direction: column;
+    align-items: center;
+  }
+  main {
+    padding: 1rem;
+  }
+}
+
+body {
+  font-family: Arial, sans-serif;
+  margin: 2em;
+  background-color: #f9f9f9;
+}
+
+main {
+  max-width: 900px;
+  margin: auto;
+}
+
+#athlete-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1em;
+  margin: 1em 0;
+}
+
+.athlete-btn {
+  padding: 1em;
+  font-size: 1em;
+  background-color: #007acc;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.athlete-btn:hover {
+  background-color: #005fa3;
+}
+
+#timer-display {
+  font-size: 2em;
+  margin: 1em 0;
+  font-weight: bold;
+}
+
+/* Base styles */
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+th, td {
+  padding: 8px;
+  font-size: 1rem;
+}
+
+/* Hide name column below 700px */
+@media (max-width: 700px) {
+  .col-name {
+    display: none;
+  }
+}
+
+/* Hide split column below 550px */
+@media (max-width: 550px) {
+  .col-split {
+    display: none;
+  }
+}
+
+/* Shrink table below 450px */
+@media (max-width: 450px) {
+  th, td {
+    padding: 4px;
+    font-size: 0.85rem;
+  }
+}
+
+th, td {
+  border: 1px solid #ccc;
+  padding: 0.5em;
+  text-align: center;
+}
+
+td[contenteditable="true"] {
+  background-color: #f0f8ff;
+  cursor: text;
+}
+
+button {
+  margin-top: 1em;
+  padding: 0.5em 1em;
+  font-size: 1em;
+}
+
+.athlete-row {
+  display: flex;
+  gap: 0.4rem;
+  align-items: center;
+}
+
+.delete-athlete {
+  background: gray;
+  color: white;
+  border: none;
+  padding: 0.1em 0.3em;
+  cursor: pointer;
+  border-radius: 4px;
+}
