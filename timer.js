@@ -110,7 +110,7 @@ function renderAthleteButtons() {
 }
 
 function renderLapTable() {
-  lapTableBody.innerHTML = "";
+  lapTableBody.innerHTML = "";  
   laps.forEach((lap, index) => {
     const row = document.createElement("tr");
     const athlete = athletes.find(a => a.number === lap.athleteNumber);
@@ -147,7 +147,14 @@ function renderLapTable() {
     timeCell.textContent = formatTime(lap.time);
 
     const splitCell = document.createElement("td");
-    splitCell.textContent = formatTime(lap.split);
+      splitCell.textContent = formatTime(lap.split);
+
+      const thresholdEnabled = document.getElementById("enable-threshold").checked;
+      const thresholdValue = parseTimeString(document.getElementById("threshold-time").value);
+
+      if (thresholdEnabled && thresholdValue !== null && lap.split < thresholdValue) {
+        splitCell.classList.add("short-split");
+      }
 
     const deleteCell = document.createElement("td");
     const delBtn = document.createElement("button");
@@ -239,6 +246,15 @@ function loadTimerState() {
     const elapsed = Date.now() - startTime;
     timerDisplay.textContent = formatTime(elapsed);
   }
+}
+
+function parseTimeString(str) {
+  const parts = str.split(":");
+  if (parts.length !== 2) return null;
+  const minutes = parseInt(parts[0], 10);
+  const seconds = parseFloat(parts[1]);
+  if (isNaN(minutes) || isNaN(seconds)) return null;
+  return (minutes * 60 + seconds) * 1000;
 }
 
 

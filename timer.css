@@ -91,3 +91,31 @@ tr.exceeded {
   background-color: #f8d7da;
 }
 
+td.short-split {
+  background-color: #ffe5b4; /* soft orange */
+  font-weight: bold;
+}
+
+#controls {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+#split-threshold-controls {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.9rem;
+}
+
+#threshold-time {
+  width: 5.5em;
+  padding: 2px 4px;
+  font-size: 0.9rem;
+}
+
+.label-text {
+  margin-left: 0.2rem;
+}

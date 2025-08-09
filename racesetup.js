@@ -14,27 +14,98 @@ function saveAthletes() {
 }
 
 function renderList() {
-    list.innerHTML = "";
-    athletes.forEach((athlete, index) => {
+  list.innerHTML = "";
+  athletes.forEach((athlete, index) => {
     const li = document.createElement("li");
 
+    // Athlete info
     const info = document.createElement("span");
-    info.textContent = `${athlete.number}, ${athlete.name || ""}, ${athlete.laps} laps`;
+    info.textContent = `${athlete.number}. ${athlete.name || ""}, ${athlete.laps} laps`;
 
+    // Edit button
+    const editBtn = document.createElement("button");
+    editBtn.textContent = "✎";
+    editBtn.className = "edit-btn";
+
+    // Delete button
     const deleteBtn = document.createElement("button");
-        deleteBtn.textContent = "✕";
-        deleteBtn.className = "delete-btn";
-        deleteBtn.dataset.index = index;
-        deleteBtn.addEventListener("click", () => {
-        athletes.splice(index, 1);
+    deleteBtn.textContent = "✕";
+    deleteBtn.className = "delete-btn";
+    deleteBtn.dataset.index = index;
+
+    deleteBtn.addEventListener("click", () => {
+      athletes.splice(index, 1);
+      saveAthletes();
+      renderList();
+    });
+
+    editBtn.addEventListener("click", () => {
+      li.innerHTML = "";
+
+      const numberField = document.createElement("input");
+      numberField.value = athlete.number;
+      numberField.size = 4;
+
+      const nameField = document.createElement("input");
+      nameField.value = athlete.name;
+      nameField.size = 10;
+
+      const lapsField = document.createElement("input");
+      lapsField.type = "number";
+      lapsField.value = athlete.laps;
+      lapsField.min = 1;
+      lapsField.size = 3;
+
+      const saveBtn = document.createElement("button");
+      saveBtn.textContent = "💾";
+      saveBtn.className = "save-btn";
+
+      const cancelBtn = document.createElement("button");
+      cancelBtn.textContent = "↩";
+      cancelBtn.className = "cancel-btn";
+
+      saveBtn.addEventListener("click", () => {
+        const newNumber = numberField.value.trim();
+        const newName = nameField.value.trim();
+        const newLaps = parseInt(lapsField.value, 10);
+
+        if (!newNumber || isNaN(newLaps) || newLaps < 1) {
+          alert("Please enter a valid athlete number and lap count.");
+          return;
+        }
+
+        const duplicate = athletes.find((a, i) => a.number === newNumber && i !== index);
+        if (duplicate) {
+          alert(`Athlete #${newNumber} is already registered.`);
+          return;
+        }
+
+        athletes[index] = { number: newNumber, name: newName, laps: newLaps };
         saveAthletes();
         renderList();
+      });
+
+      cancelBtn.addEventListener("click", renderList);
+
+      li.appendChild(numberField);
+      li.appendChild(nameField);
+      li.appendChild(lapsField);
+      li.appendChild(saveBtn);
+      li.appendChild(cancelBtn);
     });
 
+    // Button container for layout
+    const buttonGroup = document.createElement("div");
+    buttonGroup.style.display = "flex";
+    buttonGroup.style.gap = "0.3rem";
+
+    buttonGroup.appendChild(editBtn);
+    buttonGroup.appendChild(deleteBtn);
+
     li.appendChild(info);
-    li.appendChild(deleteBtn);
+    li.appendChild(buttonGroup);
     list.appendChild(li);
-    });
+  });
 }
 
 addBtn.addEventListener("click", () => {
