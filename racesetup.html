@@ -4,11 +4,10 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Race Setup</title>
-  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
-  <main>
-    <header>
+  <header>
     <nav>
       <ul class="navbar">
         <li><a href="index.html">Home</a></li>
@@ -19,93 +18,39 @@
       </ul>
     </nav>
   </header>
+
+  <main>
     <h1>Race Setup</h1>
-    <form id="athlete-form">
-      <h2>Create Start list from CSV file</h2>
-      <p>This should be three columns: Number, Name, Laps. Uploading from a file will clear any manual input</p>
-      <input type="file" id="csv-upload" accept=".csv" />
-      <h2>Or Add competitors manually</h2>
-      <div id="athlete-rows"></div>
-      <button type="button" id="add-athlete">Add Athlete</button>
-      <button type="submit">Start Race</button>
-    </form>
+
+    <div class="form-section">
+      <label for="athlete-number">Athlete Number:</label>
+      <input type="text" id="athlete-number" placeholder="e.g. 1234" />
+
+      <label for="athlete-name">Athlete Name (optional):</label>
+      <input type="text" id="athlete-name" placeholder="e.g. Jane Doe" />
+
+      <label for="lap-count">Number of Laps:</label>
+      <input type="number" id="lap-count" min="1" placeholder="e.g. 5" />
+
+      <button id="add-athlete" class="controlBtn">Add Athlete</button>
+    </div>
+
+    <div class="form-section">
+      <h2>Import Athletes from CSV</h2>
+      <input type="file" id="csv-input" accept=".csv" />
+    </div>
+
+    <div class="form-section">
+      <h2>Registered Athletes</h2>
+      <ul id="athlete-list"></ul>
+    </div>
+
+    <div class="controls">
+      <button id="clear-all" class="controlBtn">Clear All</button>
+      <button id="proceed-btn" class="controlBtn">Proceed to Race</button>
+    </div>
   </main>
 
-  <script>
-    const athleteRows = document.getElementById("athlete-rows");
-    const addBtn = document.getElementById("add-athlete");
-
-    let athleteCount = 0;
-
-    function addAthleteRow() {
-      athleteCount++;
-      const row = document.createElement("div");
-      row.className = "athlete-row";
-      row.innerHTML = `
-        <input type="text" name="number" placeholder="Number" required />
-        <input type="text" name="name" placeholder="Name (optional)" />
-        <input type="number" name="laps" placeholder="Laps" min="1" required />
-        <button type="button" class="delete-athlete">❌</button>
-      `;
-      const deleteBtn = row.querySelector(".delete-athlete");
-        deleteBtn.addEventListener("click", () => {
-          athleteRows.removeChild(row);
-        });
-      athleteRows.appendChild(row);
-    }
-
-    // Add initial 3 rows
-    for (let i = 0; i < 2; i++) addAthleteRow();
-
-    addBtn.addEventListener("click", addAthleteRow);
-
-    document.getElementById("athlete-form").addEventListener("submit", (e) => {
-      e.preventDefault();
-      const rows = document.querySelectorAll(".athlete-row");
-      const athletes = [];
-
-      rows.forEach(row => {
-        const inputs = row.querySelectorAll("input");
-        athletes.push({
-          number: inputs[0].value.trim(),
-          name: inputs[1].value.trim(),
-          laps: parseInt(inputs[2].value)
-        });
-      });
-
-      localStorage.setItem("athletes", JSON.stringify(athletes));
-      window.location.href = "timer.html";
-    });
-
-    document.getElementById("csv-upload").addEventListener("change", function (e) {
-  const file = e.target.files[0];
-  if (!file) return;
-
-  const reader = new FileReader();
-  reader.onload = function (event) {
-    const lines = event.target.result.split("\n").map(line => line.trim()).filter(Boolean);
-    athleteRows.innerHTML = "";
-    lines.forEach(line => {
-      const [number, name, laps] = line.split(",");
-      if (!number || !laps) return; // skip invalid rows
-
-      const row = document.createElement("div");
-      row.className = "athlete-row";
-      row.innerHTML = `
-        <input type="text" name="number" value="${number.trim()}" required />
-        <input type="text" name="name" value="${name?.trim() || ""}" />
-        <input type="number" name="laps" value="${parseInt(laps)}" min="1" required />
-        <button type="button" class="delete-athlete">❌</button>
-      `;
-        const deleteBtn = row.querySelector(".delete-athlete");
-          deleteBtn.addEventListener("click", () => {
-            athleteRows.removeChild(row);
-          });
-      athleteRows.appendChild(row);
-    });
-  };
-  reader.readAsText(file);
-});
-  </script>
+  <script src="racesetup.js"></script>
 </body>
 </html>

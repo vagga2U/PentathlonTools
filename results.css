@@ -1,0 +1,38 @@
+  #leaderboards section {
+    margin-bottom: 2em;
+  }
+
+  table {
+    border-collapse: collapse;
+    width: 100%;
+    margin-top: 0.5em;
+  }
+
+  th, td {
+    border: 1px solid #ccc;
+    padding: 6px 10px;
+    text-align: center;
+  }
+
+  th {
+    background-color: #f0f0f0;
+  }
+
+  tr.incomplete {
+    background-color: #ffecec;
+  }
+
+  button {
+    margin: 0.5em 0;
+    padding: 6px 12px;
+    font-size: 14px;
+    cursor: pointer;
+    background-color: #0078d4;
+    color: white;
+    border: none;
+    border-radius: 4px;
+  }
+
+  button:hover {
+    background-color: #005ea2;
+  }
